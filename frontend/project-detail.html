@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html class="dark" lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaskFlow — Projet</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <style>
+    body { background-color: #0b1326; color: #dae2fd; font-family: 'Inter', sans-serif; }
+    .glass-card { background: rgba(30,42,56,0.6); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); }
+    .glass-input { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); }
+    .glass-input:focus { border-color: #aec8f5; outline: none; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+    .modal-bg { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="glass-card px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-lg bg-[#aec8f5] flex items-center justify-center">
+      <span class="material-symbols-outlined text-[#143156] text-lg">task_alt</span>
+    </div>
+    <span class="font-bold text-lg font-['Manrope']">TaskFlow</span>
+  </div>
+  <div class="flex items-center gap-6">
+    <a href="dashboard.html" class="text-[#8e9196] hover:text-[#dae2fd] text-sm">Dashboard</a>
+    <a href="projects.html" class="text-[#aec8f5] font-semibold text-sm">Projets</a>
+    <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-lg">
+      Déconnexion
+    </button>
+  </div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-6 py-8">
+
+  <!-- Header -->
+  <div class="flex items-center gap-3 mb-2">
+    <button onclick="window.location.href='projects.html'" 
+      class="text-[#8e9196] hover:text-[#dae2fd] flex items-center gap-1 text-sm">
+      <span class="material-symbols-outlined text-lg">arrow_back</span> Retour
+    </button>
+  </div>
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 id="project-title" class="text-2xl font-bold font-['Manrope']">—</h1>
+      <p id="project-desc" class="text-[#8e9196] text-sm mt-1">—</p>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="openMemberModal()"
+        class="glass-input text-[#dae2fd] text-sm px-4 py-2.5 rounded-lg hover:bg-white/5 flex items-center gap-2">
+        <span class="material-symbols-outlined text-lg">person_add</span> Membre
+      </button>
+      <button onclick="openTaskModal()"
+        class="bg-[#aec8f5] text-[#143156] font-semibold text-sm px-4 py-2.5 rounded-lg hover:brightness-110 flex items-center gap-2">
+        <span class="material-symbols-outlined text-lg">add</span> Tâche
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Tâches (2/3) -->
+    <div class="lg:col-span-2 space-y-4">
+
+      <!-- Filtres -->
+      <div class="glass-card rounded-xl p-4 flex gap-3 flex-wrap">
+        <input id="filter-search" type="text" placeholder="🔍 Rechercher..."
+          oninput="loadTasks()"
+          class="flex-1 min-w-[160px] h-9 px-3 rounded-lg glass-input text-[#dae2fd] placeholder:text-[#8e9196] text-sm"/>
+        <select id="filter-status" onchange="loadTasks()"
+          class="h-9 px-3 rounded-lg glass-input text-[#dae2fd] text-sm">
+          <option value="">Tous les statuts</option>
+          <option value="à faire">À faire</option>
+          <option value="en cours">En cours</option>
+          <option value="terminé">Terminé</option>
+        </select>
+        <select id="filter-priority" onchange="loadTasks()"
+          class="h-9 px-3 rounded-lg glass-input text-[#dae2fd] text-sm">
+          <option value="">Toutes priorités</option>
+          <option value="haute">Haute</option>
+          <option value="moyenne">Moyenne</option>
+          <option value="basse">Basse</option>
+        </select>
+      </div>
+
+      <!-- Liste tâches -->
+      <div id="tasks-list" class="space-y-3"></div>
+      <div id="tasks-pagination" class="flex justify-center gap-2 mt-4"></div>
+    </div>
+
+    <!-- Sidebar (1/3) -->
+    <div class="space-y-6">
+
+      <!-- Membres -->
+      <div class="glass-card rounded-xl p-5">
+        <h3 class="font-semibold font-['Manrope'] mb-4">Membres</h3>
+        <div id="members-list" class="space-y-3"></div>
+      </div>
+
+      <!-- Activités -->
+      <div class="glass-card rounded-xl p-5">
+        <h3 class="font-semibold font-['Manrope'] mb-4">Activités récentes</h3>
+        <div id="activity-feed" class="space-y-3"></div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- MODAL TÂCHE -->
+<div id="modal-task" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center">
+  <div class="glass-card rounded-xl p-8 w-full max-w-md shadow-2xl">
+    <h2 id="modal-task-title" class="text-lg font-bold font-['Manrope'] mb-6">Nouvelle tâche</h2>
+    <div class="space-y-4">
+      <div>
+        <label class="text-xs font-semibold text-[#8e9196] uppercase tracking-widest">Titre *</label>
+        <input id="task-title" type="text" placeholder="Titre de la tâche"
+          class="w-full h-11 px-4 mt-1 rounded-lg glass-input text-[#dae2fd] placeholder:text-[#8e9196] text-sm"/>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-[#8e9196] uppercase tracking-widest">Description</label>
+        <textarea id="task-desc" placeholder="Description..."
+          class="w-full px-4 py-3 mt-1 rounded-lg glass-input text-[#dae2fd] placeholder:text-[#8e9196] text-sm resize-none h-20"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs font-semibold text-[#8e9196] uppercase tracking-widest">Priorité</label>
+          <select id="task-priority"
+            class="w-full h-11 px-3 mt-1 rounded-lg glass-input text-[#dae2fd] text-sm">
+            <option value="basse">Basse</option>
+            <option value="moyenne">Moyenne</option>
+            <option value="haute">Haute</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-[#8e9196] uppercase tracking-widest">Date limite</label>
+          <input id="task-deadline" type="date"
+            class="w-full h-11 px-3 mt-1 rounded-lg glass-input text-[#dae2fd] text-sm"/>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-[#8e9196] uppercase tracking-widest">Assigner à</label>
+        <select id="task-assignee"
+          class="w-full h-11 px-3 mt-1 rounded-lg glass-input text-[#dae2fd] text-sm">
+          <option value="">Non assignée</option>
+        </select>
+      </div>
+      <p id="draft-hint" class="text-xs text-yellow-400 bg-yellow-400/10 px-3 py-2 rounded-lg hidden">
+        📝 Brouillon restauré — <a href="#" onclick="clearDraft()" class="underline">Effacer</a>
+      </p>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="saveTask()"
+        class="flex-1 bg-[#aec8f5] text-[#143156] font-semibold text-sm py-2.5 rounded-lg hover:brightness-110">
+        Enregistrer
+      </button>
+      <button onclick="closeModals()"
+        class="flex-1 glass-input text-[#dae2fd] text-sm py-2.5 rounded-lg hover:bg-white/5">
+        Annuler
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MEMBRE -->
+<div id="modal-member" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center">
+  <div class="glass-card rounded-xl p-8 w-full max-w-sm shadow-2xl">
+    <h2 class="text-lg font-bold font-['Manrope'] mb-6">Inviter un membre</h2>
+    <div>
+      <label class="text-xs font-semibold text-[#8e9196] uppercase tracking-widest">Email</label>
+      <input id="member-email" type="email" placeholder="nom@exemple.com"
+        class="w-full h-11 px-4 mt-1 rounded-lg glass-input text-[#dae2fd] placeholder:text-[#8e9196] text-sm"/>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="inviteMember()"
+        class="flex-1 bg-[#aec8f5] text-[#143156] font-semibold text-sm py-2.5 rounded-lg hover:brightness-110">
+        Inviter
+      </button>
+      <button onclick="closeModals()"
+        class="flex-1 glass-input text-[#dae2fd] text-sm py-2.5 rounded-lg hover:bg-white/5">
+        Annuler
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+const API      = 'http://localhost:5000/api';
+const token    = localStorage.getItem('token');
+const user     = JSON.parse(localStorage.getItem('user') || 'null');
+const projectId = localStorage.getItem('currentProject');
+
+if (!token) window.location.href = 'index.html';
+if (!projectId) window.location.href = 'projects.html';
+
+let editingTaskId  = null;
+let currentPage    = 1;
+let projectMembers = [];
+
+// ── INIT ──────────────────────────────────────────────────────────
+async function init() {
+  const { data: p } = await axios.get(`${API}/projects/${projectId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  document.getElementById('project-title').textContent = p.title;
+  document.getElementById('project-desc').textContent  = p.description || '';
+  projectMembers = [p.owner, ...p.members.filter(m => m._id !== p.owner._id)];
+  renderMembers(p);
+  populateAssignee(projectMembers);
+  loadTasks();
+  loadActivities();
+}
+
+// ── MEMBRES ───────────────────────────────────────────────────────
+function renderMembers(p) {
+  const list = document.getElementById('members-list');
+  const allMembers = [p.owner, ...p.members.filter(m => m._id !== p.owner._id)];
+  list.innerHTML = allMembers.map(m => `
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-[#aec8f5]/20 flex items-center justify-center text-xs font-bold text-[#aec8f5]">
+          ${m.fullName.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <p class="text-sm font-medium">${m.fullName} ${m._id === p.owner._id ? '👑' : ''}</p>
+          <p class="text-xs text-[#8e9196]">${m.email.replace('mailto:','')}</p>
+        </div>
+      </div>
+      ${m._id !== p.owner._id && user.id === p.owner._id
+        ? `<button onclick="removeMember('${m._id}')" class="text-red-400 text-xs hover:text-red-300">Retirer</button>`
+        : ''}
+    </div>
+  `).join('');
+}
+
+function populateAssignee(members) {
+  const sel = document.getElementById('task-assignee');
+  sel.innerHTML = '<option value="">Non assignée</option>';
+  members.forEach(m => {
+    sel.innerHTML += `<option value="${m._id}">${m.fullName}</option>`;
+  });
+}
+
+function openMemberModal() {
+  document.getElementById('member-email').value = '';
+  document.getElementById('modal-member').classList.remove('hidden');
+}
+
+async function inviteMember() {
+  const email = document.getElementById('member-email').value.trim();
+  if (!email) return;
+  try {
+    await axios.post(`${API}/projects/${projectId}/members`, { email }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    closeModals();
+    init();
+  } catch (err) { alert(err.response?.data?.message || 'Erreur'); }
+}
+
+async function removeMember(userId) {
+  if (!confirm('Retirer ce membre ?')) return;
+  await axios.delete(`${API}/projects/${projectId}/members/${userId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  init();
+}
+
+// ── TÂCHES ────────────────────────────────────────────────────────
+async function loadTasks(page = 1) {
+  currentPage = page;
+  const search   = document.getElementById('filter-search').value;
+  const status   = document.getElementById('filter-status').value;
+  const priority = document.getElementById('filter-priority').value;
+
+  const params = new URLSearchParams({ page, limit: 8 });
+  if (search)   params.append('search', search);
+  if (status)   params.append('status', status);
+  if (priority) params.append('priority', priority);
+
+  try {
+    const { data } = await axios.get(`${API}/tasks/project/${projectId}?${params}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const list = document.getElementById('tasks-list');
+    if (!data.data.length) {
+      list.innerHTML = `<div class="glass-card rounded-xl p-8 text-center">
+        <span class="material-symbols-outlined text-4xl text-[#8e9196]">assignment</span>
+        <p class="text-[#8e9196] mt-2 text-sm">Aucune tâche</p>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = data.data.map(t => {
+      const pColor = t.priority === 'haute'   ? 'text-red-400 bg-red-400/10' :
+                     t.priority === 'moyenne' ? 'text-yellow-400 bg-yellow-400/10' :
+                                                'text-green-400 bg-green-400/10';
+      const sColor = t.status === 'terminé'  ? 'text-green-400 bg-green-400/10' :
+                     t.status === 'en cours' ? 'text-yellow-400 bg-yellow-400/10' :
+                                               'text-[#8e9196] bg-white/5';
+      return `
+      <div class="glass-card rounded-xl p-4 flex justify-between items-center gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <h4 class="font-semibold text-sm">${t.title}</h4>
+            <span class="text-xs px-2 py-0.5 rounded-full ${pColor}">${t.priority}</span>
+          </div>
+          <div class="flex items-center gap-3 text-xs text-[#8e9196]">
+            <span class="px-2 py-0.5 rounded-full ${sColor}">${t.status}</span>
+            ${t.assignedTo ? `<span>👤 ${t.assignedTo.fullName}</span>` : ''}
+            ${t.deadline   ? `<span>📅 ${new Date(t.deadline).toLocaleDateString('fr-FR')}</span>` : ''}
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <select onchange="quickStatus('${t._id}', this.value)"
+            class="h-8 px-2 rounded-lg glass-input text-[#dae2fd] text-xs">
+            <option value="à faire"  ${t.status==='à faire'  ?'selected':''}>À faire</option>
+            <option value="en cours" ${t.status==='en cours' ?'selected':''}>En cours</option>
+            <option value="terminé"  ${t.status==='terminé'  ?'selected':''}>Terminé</option>
+          </select>
+          <button onclick="openTaskModal('${t._id}')" class="text-[#8e9196] hover:text-[#dae2fd]">
+            <span class="material-symbols-outlined text-lg">edit</span>
+          </button>
+          <button onclick="deleteTask('${t._id}')" class="text-red-400 hover:text-red-300">
+            <span class="material-symbols-outlined text-lg">delete</span>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Pagination
+    const pages = document.getElementById('tasks-pagination');
+    pages.innerHTML = '';
+    for (let i = 1; i <= data.totalPages; i++) {
+      pages.innerHTML += `<button onclick="loadTasks(${i})"
+        class="w-9 h-9 rounded-lg ${i === page ? 'bg-[#aec8f5] text-[#143156]' : 'glass-input text-[#8e9196]'} text-sm">${i}</button>`;
+    }
+  } catch (err) { console.error(err); }
+}
+
+async function quickStatus(taskId, status) {
+  await axios.patch(`${API}/tasks/${taskId}/status`, { status }, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  loadTasks(currentPage);
+  loadActivities();
+}
+
+function openTaskModal(id = null) {
+  editingTaskId = id;
+  document.getElementById('modal-task-title').textContent = id ? 'Modifier la tâche' : 'Nouvelle tâche';
+  document.getElementById('task-title').value    = '';
+  document.getElementById('task-desc').value     = '';
+  document.getElementById('task-priority').value = 'basse';
+  document.getElementById('task-deadline').value = '';
+  document.getElementById('task-assignee').value = '';
+  document.getElementById('draft-hint').classList.add('hidden');
+
+  if (id) {
+    axios.get(`${API}/tasks/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(({ data: t }) => {
+        document.getElementById('task-title').value    = t.title;
+        document.getElementById('task-desc').value     = t.description || '';
+        document.getElementById('task-priority').value = t.priority;
+        document.getElementById('task-deadline').value = t.deadline ? t.deadline.slice(0,10) : '';
+        document.getElementById('task-assignee').value = t.assignedTo?._id || '';
+      });
+  } else {
+    restoreDraft();
+  }
+  document.getElementById('modal-task').classList.remove('hidden');
+  setupDraftListeners();
+}
+
+async function saveTask() {
+  const body = {
+    title:       document.getElementById('task-title').value.trim(),
+    description: document.getElementById('task-desc').value.trim(),
+    priority:    document.getElementById('task-priority').value,
+    deadline:    document.getElementById('task-deadline').value || undefined,
+    assignedTo:  document.getElementById('task-assignee').value || undefined,
+    project:     projectId,
+  };
+  if (!body.title) return alert('Le titre est requis');
+  try {
+    if (editingTaskId) {
+      await axios.put(`${API}/tasks/${editingTaskId}`, body, { headers: { Authorization: `Bearer ${token}` } });
+    } else {
+      await axios.post(`${API}/tasks`, body, { headers: { Authorization: `Bearer ${token}` } });
+      localStorage.removeItem(`draft_${projectId}`);
+    }
+    closeModals();
+    loadTasks(currentPage);
+    loadActivities();
+  } catch (err) { alert(err.response?.data?.message || 'Erreur'); }
+}
+
+async function deleteTask(id) {
+  if (!confirm('Supprimer cette tâche ?')) return;
+  await axios.delete(`${API}/tasks/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+  loadTasks(currentPage);
+  loadActivities();
+}
+
+// ── BROUILLONS ────────────────────────────────────────────────────
+function setupDraftListeners() {
+  ['task-title','task-desc','task-priority','task-deadline','task-assignee'].forEach(id => {
+    document.getElementById(id).addEventListener('input', saveDraft);
+  });
+}
+
+function saveDraft() {
+  if (editingTaskId) return;
+  localStorage.setItem(`draft_${projectId}`, JSON.stringify({
+    title:    document.getElementById('task-title').value,
+    desc:     document.getElementById('task-desc').value,
+    priority: document.getElementById('task-priority').value,
+    deadline: document.getElementById('task-deadline').value,
+    assignee: document.getElementById('task-assignee').value,
+  }));
+}
+
+function restoreDraft() {
+  const raw = localStorage.getItem(`draft_${projectId}`);
+  if (!raw) return;
+  const d = JSON.parse(raw);
+  document.getElementById('task-title').value    = d.title    || '';
+  document.getElementById('task-desc').value     = d.desc     || '';
+  document.getElementById('task-priority').value = d.priority || 'basse';
+  document.getElementById('task-deadline').value = d.deadline || '';
+  document.getElementById('task-assignee').value = d.assignee || '';
+  document.getElementById('draft-hint').classList.remove('hidden');
+}
+
+function clearDraft() {
+  localStorage.removeItem(`draft_${projectId}`);
+  document.getElementById('draft-hint').classList.add('hidden');
+  document.getElementById('task-title').value    = '';
+  document.getElementById('task-desc').value     = '';
+  document.getElementById('task-priority').value = 'basse';
+  document.getElementById('task-deadline').value = '';
+  document.getElementById('task-assignee').value = '';
+}
+
+// ── ACTIVITÉS ─────────────────────────────────────────────────────
+async function loadActivities() {
+  try {
+    const { data } = await axios.get(`${API}/projects/${projectId}/activities`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const feed = document.getElementById('activity-feed');
+    if (!data.length) {
+      feed.innerHTML = '<p class="text-[#8e9196] text-xs">Aucune activité</p>';
+      return;
+    }
+    feed.innerHTML = data.slice(0,10).map(a => `
+      <div class="flex gap-2 text-xs">
+        <div class="w-6 h-6 rounded-full bg-[#aec8f5]/20 flex items-center justify-center text-[#aec8f5] font-bold shrink-0">
+          ${a.user?.fullName?.charAt(0) || '?'}
+        </div>
+        <div>
+          <p class="text-[#dae2fd]">${formatActivity(a)}</p>
+          <p class="text-[#8e9196]">${timeAgo(new Date(a.createdAt))}</p>
+        </div>
+      </div>
+    `).join('');
+  } catch(err) {}
+}
+
+function formatActivity(a) {
+  const map = {
+    task_created:   `a créé "${a.meta?.taskTitle}"`,
+    task_deleted:   `a supprimé "${a.meta?.taskTitle}"`,
+    task_updated:   `a modifié "${a.meta?.taskTitle}"`,
+    status_changed: `a changé le statut : ${a.meta?.from} → ${a.meta?.to}`,
+    member_added:   `a ajouté ${a.meta?.memberEmail}`,
+    member_removed: `a retiré un membre`,
+  };
+  return `<strong>${a.user?.fullName}</strong> ${map[a.type] || a.type}`;
+}
+
+function timeAgo(date) {
+  const diff = Math.floor((Date.now() - date) / 1000);
+  if (diff < 60) return 'à l\'instant';
+  if (diff < 3600) return `il y a ${Math.floor(diff/60)} min`;
+  if (diff < 86400) return `il y a ${Math.floor(diff/3600)} h`;
+  return `il y a ${Math.floor(diff/86400)} j`;
+}
+
+function closeModals() {
+  document.getElementById('modal-task').classList.add('hidden');
+  document.getElementById('modal-member').classList.add('hidden');
+}
+
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href = 'index.html';
+}
+
+init();
+</script>
+</body>
+</html>
