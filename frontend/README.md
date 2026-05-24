@@ -27,23 +27,23 @@ Puis ouvre http://localhost:3000
 
 | # | Fonctionnalité | Développeur |
 |---|---|---|
-| 1 | Authentification JWT + bcrypt | Yousra |
-| 2 | Gestion des projets CRUD | Yousra |
-| 3 | Gestion des tâches | Yousra |
-| 4 | Assignation des tâches | Yousra |
-| 5 | Tableau de bord | Yousra |
-| 6 | Filtrage et recherche | Rnad |
-| 7 | Brouillons automatiques | Rnad |
-| 8 | Gestion des membres | Rnad |
-| 9 | Historique des activités | Rnad |
-| 10 | Notifications + polling | Rnad |
+| 1 | Authentification JWT + bcrypt | Yousra El boudali  |
+| 2 | Gestion des projets CRUD | Yousra El boudali |
+| 3 | Gestion des tâches | Yousra El boudali |
+| 4 | Assignation des tâches | Yousra El boudali  |
+| 5 | Tableau de bord | Yousra El boudali |
+| 6 | Filtrage et recherche | Rnad Fahd Mohammed Darasi |
+| 7 | Brouillons automatiques | Rnad Fahd Mohammed Darasi |
+| 8 | Gestion des membres | Rnad Fahd Mohammed Darasi |
+| 9 | Historique des activités | Rnad Fahd Mohammed Darasi |
+| 10 | Notifications + polling | Rnad Fahd Mohammed Darasi |
 
 ## Répartition des tâches
 
 | Membre | Rôle | Fonctionnalités |
 |---|---|---|
-| Yousra | Chef de projet | 1, 2, 3, 4, 5 |
-| Rnad | Développeur | 6, 7, 8, 9, 10 |
+| Yousra El boudali  | Chef de projet | 1, 2, 3, 4, 5 |
+| Rnad Fahd Mohammed Darasi | Développeur | 6, 7, 8, 9, 10 |
 
 ## Workflow Git
 
